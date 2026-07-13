@@ -119,7 +119,9 @@
     .price{font-size:22px;font-weight:900;color:var(--accent);margin:11px 0}
     .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
     .meta div{padding:8px;background:rgba(255,255,255,.035);border-radius:9px;text-align:center;font-size:11px}
-    .notes{font-size:12px;color:var(--muted);line-height:1.5;min-height:36px}
+    .features-list{margin:10px 0;padding:10px 12px;background:rgba(216,197,141,.06);border:1px solid var(--line);border-radius:10px}
+    .features-list div{font-size:12px;line-height:1.55;margin:2px 0}
+    .notes{font-size:12px;color:var(--muted);line-height:1.5;min-height:0}
     .card-actions{display:flex;gap:7px;margin-top:12px}
     .card-actions button{flex:1;padding:8px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer}
     .empty{text-align:center;padding:55px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:16px}
@@ -370,7 +372,10 @@
         </div>
       </div>
 
-      <div class="field"><label>Features / Notes</label><textarea id="notes" placeholder="Corner unit, furnished, vacant, sea view..."></textarea></div>
+      <div class="field"><label>Main Feature 1</label><input id="feature1" placeholder="Example: Spacious private garden"></div>
+      <div class="field"><label>Main Feature 2</label><input id="feature2" placeholder="Example: Covered parking"></div>
+      <div class="field"><label>Main Feature 3</label><input id="feature3" placeholder="Example: Vacant and ready"></div>
+      <div class="field"><label>Additional Notes</label><textarea id="notes" placeholder="Add only extra information not already listed above..."></textarea></div>
       <div class="form-actions">
         <button class="btn primary" onclick="saveProperty()">Save Property</button>
         <button class="btn" onclick="resetForm()">Clear</button>
@@ -447,31 +452,24 @@ Separate multiple listings with a blank line."></textarea>
       <h3>WhatsApp Listing Template</h3>
       <p class="small">Copy this structure into WhatsApp, complete the details, then paste the finished message into the import box above.</p>
       <textarea id="waTemplate" readonly>🏠 ALHAMOUDI REAL ESTATE LISTING
-
 Property Title:
-Purpose: Sale / Rent / Off-plan / Investment / JV
+Purpose:
 Property Type:
 Emirate:
 Area / Community:
 Location Link:
-
 Price: AED
 Size: sq ft
 Bedrooms:
 Bathrooms:
-Status: Available / Reserved / Sold / Rented / Under Offer
-
+Status:
 Reference:
 Agent:
 Contact / WhatsApp:
-
-Main Features:
--
--
--
-
+Main Feature 1:
+Main Feature 2:
+Main Feature 3:
 Photo URL:
-
 Notes:
 </textarea>
       <div class="wa-template-actions">
@@ -492,6 +490,33 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const money = n => 'AED ' + Number(n || 0).toLocaleString('en-AE');
 const saveStore = () => localStorage.setItem(STORE_KEY, JSON.stringify(properties));
+
+function repairOldImports(){
+  let changed=false;
+  properties=properties.map(x=>{
+    const n=String(x.notes||'');
+    if((/^🏠?\s*ALHAMOUDI REAL ESTATE LISTING$/i.test(String(x.title||'').trim()) || /^Emirate\s*:/i.test(String(x.area||''))) && /Property Title\s*:/i.test(n)){
+      const field=label=>{
+        const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        const m=n.match(new RegExp('(?:^|·|\\n)\\s*'+escaped+'\\s*:\\s*(.*?)(?=\\s*(?:·|\\n)\\s*[A-Za-z][A-Za-z /0-9]*\\s*:|$)','i'));
+        return m?m[1].trim():'';
+      };
+      x.title=field('Property Title')||x.title;
+      x.area=field('Area / Community')||String(x.area||'').replace(/^Emirate\s*:\s*/i,'');
+      x.locationUrl=field('Location Link')||x.locationUrl||'';
+      x.ref=field('Reference')||x.ref||'';
+      x.agent=field('Agent')||x.agent||'';
+      x.feature1=field('Main Feature 1')||x.feature1||'';
+      x.feature2=field('Main Feature 2')||x.feature2||'';
+      x.feature3=field('Main Feature 3')||x.feature3||'';
+      x.photo=field('Photo URL')||x.photo||'';
+      x.notes=field('Notes')||'';
+      changed=true;
+    }
+    return x;
+  });
+  if(changed) saveStore();
+}
 
 
 let uploadedPhotoData = '';
@@ -572,6 +597,9 @@ function saveProperty(){
     ref: $('ref').value.trim(),
     agent: $('agent').value.trim(),
     contact: $('contact').value.trim(),
+    feature1: $('feature1').value.trim(),
+    feature2: $('feature2').value.trim(),
+    feature3: $('feature3').value.trim(),
     photo: $('photo').value.trim(),
     notes: $('notes').value.trim(),
     updatedAt: new Date().toISOString()
@@ -582,7 +610,7 @@ function saveProperty(){
 }
 
 function resetForm(){
-  ['editId','title','area','locationUrl','price','size','beds','baths','ref','agent','contact','photo','notes'].forEach(id => $(id).value='');
+  ['editId','title','area','locationUrl','price','size','beds','baths','ref','agent','contact','feature1','feature2','feature3','photo','notes'].forEach(id => $(id).value='');
   $('formTitle').textContent='Add Property';
   $('status').value='Available';
   $('purpose').value='Sale';
@@ -616,7 +644,7 @@ function duplicateProperty(id){
 function render(){
   const q=$('search').value.toLowerCase(), em=$('fEmirate').value, pu=$('fPurpose').value, ty=$('fType').value;
   let list=properties.filter(x=>{
-    const blob=[x.title,x.area,x.agent,x.ref,x.notes,x.contact].join(' ').toLowerCase();
+    const blob=[x.title,x.area,x.agent,x.ref,x.notes,x.feature1,x.feature2,x.feature3,x.contact].join(' ').toLowerCase();
     return (!q||blob.includes(q))&&(!em||x.emirate===em)&&(!pu||x.purpose===pu)&&(!ty||x.type===ty);
   });
   const s=$('sort').value;
@@ -645,7 +673,10 @@ function render(){
           <div>🛁 ${esc(x.baths || '-')} Baths</div>
           <div>◫ ${Number(x.size||0).toLocaleString()} ft²</div>
         </div>
-        <div class="notes">${esc(x.notes || 'No additional notes.')}</div>
+        ${(x.feature1||x.feature2||x.feature3) ? `<div class="features-list">
+          ${[x.feature1,x.feature2,x.feature3].filter(Boolean).map(f=>`<div>✓ ${esc(f)}</div>`).join('')}
+        </div>` : ''}
+        ${x.notes ? `<div class="notes">${esc(x.notes)}</div>` : ''}
         <div class="small" style="margin-top:8px">Ref: ${esc(x.ref||'-')} · Agent: ${esc(x.agent||'-')}</div>
         <div class="small">${esc(x.contact||'')}</div>
         <div class="card-actions">
@@ -674,7 +705,7 @@ function restoreJSON(e){
   r.readAsText(f); e.target.value='';
 }
 function exportCSV(){
-  const heads=['title','emirate','purpose','type','status','area','locationUrl','price','size','beds','baths','ref','agent','contact','photo','notes'];
+  const heads=['title','emirate','purpose','type','status','area','locationUrl','price','size','beds','baths','ref','agent','contact','feature1','feature2','feature3','photo','notes'];
   const rows=[heads.join(','),...properties.map(x=>heads.map(h=>`"${String(x[h]??'').replaceAll('"','""')}"`).join(','))];
   download('uae-real-estate-listings.csv',rows.join('\n'),'text/csv');
 }
@@ -712,57 +743,73 @@ function readImportFile(e){
 }
 
 function parseChat(){
-  const raw=$('chatText').value.trim(); if(!raw){alert('Paste chat text first.');return;}
-  const blocks=raw.split(/\n\s*\n|(?=Property\s*\d+\s*:)/i).map(x=>x.trim()).filter(Boolean);
-  const emirates=['Dubai','Abu Dhabi','Sharjah','Ajman','Ras Al Khaimah','Fujairah','Umm Al Quwain'];
-  const added=blocks.map((b,idx)=>{
-    const lines=b.split('\n').map(x=>x.replace(/^\[[^\]]+\]\s*[^:]+:\s*/,'').trim()).filter(Boolean);
-    const findNum=(rx)=>{const m=b.match(rx);return m?Number(m[1].replace(/[,\s]/g,'')):0};
-    const price=findNum(/(?:price|asking|aed|درهم)\s*[:\-]?\s*(?:aed)?\s*([\d,\s.]+)/i)||findNum(/([\d,.]+)\s*(?:aed|درهم)/i);
-    const size=findNum(/(?:size|plot|built.?up|bua|gfa|مساحة)\s*[:\-]?\s*([\d,\s.]+)/i);
-    const beds=(b.match(/(\d+(?:\.\d+)?)\s*(?:bed(?:room)?s?|br|غرف)/i)||[])[1]||'';
-    const baths=(b.match(/(\d+(?:\.\d+)?)\s*(?:bath(?:room)?s?|حمام)/i)||[])[1]||'';
-    const phone=(b.match(/(?:\+?971[\s-]?)?0?5\d[\s-]?\d{3}[\s-]?\d{4}/)||[])[0]||'';
-    const emirate=emirates.find(e=>b.toLowerCase().includes(e.toLowerCase()))||'Dubai';
-    let purpose=/rent|lease|إيجار/i.test(b)?'Rent':/off.?plan|على الخارطة/i.test(b)?'Off-plan':/jv|joint venture/i.test(b)?'JV':'Sale';
-    let type=['Villa','Apartment','Townhouse','Land','Building','Commercial','Warehouse','Hotel','Office'].find(t=>b.toLowerCase().includes(t.toLowerCase()))||'Other';
-    const field = label => {
-      const rx = new RegExp('^' + label + '\\s*:\\s*(.*)$','im');
+  const raw=$('chatText').value.trim();
+  if(!raw){alert('Paste one completed property listing first.');return;}
+
+  // One pasted template = one listing. Blank lines do not create extra records.
+  const b = raw.replace(/\r/g,'').trim();
+  const lines = b.split('\n').map(line => line.trim()).filter(Boolean);
+
+  const getField = (...labels) => {
+    for(const label of labels){
+      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const rx = new RegExp('^\\s*' + escaped + '\\s*:\\s*(.*?)\\s*$','im');
       const m = b.match(rx);
-      return m ? m[1].trim() : '';
-    };
-    const areaLine=field('Area \\/ Community') || lines.find(l=>emirates.some(e=>l.toLowerCase().includes(e.toLowerCase())))||'';
-    const explicitTitle=field('Property Title');
-    const explicitStatus=field('Status');
-    const explicitRef=field('Reference');
-    const explicitAgent=field('Agent');
-    const locationUrl=field('Location Link');
-    const photoUrl=field('Photo URL');
-    const explicitType=field('Property Type');
-    const explicitPurpose=field('Purpose');
-    const explicitEmirate=field('Emirate');
-    const notesStart = lines.findIndex(l=>/^Main Features:|^Notes:/i.test(l));
-    const notesText = notesStart >= 0 ? lines.slice(notesStart).join(' · ') : lines.slice(1).join(' · ');
-    return {
-      id:crypto.randomUUID(),
-      title:explicitTitle || lines[0]?.replace(/^🏠\s*/,'').slice(0,90)||`Imported Property ${idx+1}`,
-      emirate: explicitEmirate || emirate,
-      purpose: explicitPurpose || purpose,
-      type: explicitType || type,
-      status: explicitStatus || 'Available',
-      area:areaLine,
-      locationUrl,
-      price,size,beds,baths,
-      ref:explicitRef,
-      agent:explicitAgent,
-      contact:phone,
-      photo:photoUrl,
-      notes:notesText.slice(0,700),
-      updatedAt:new Date().toISOString()
-    };
-  });
-  properties=[...added,...properties];saveStore();render();closeImport();$('chatText').value='';
-  alert(added.length+' listing(s) imported. Please review the extracted details.');
+      if(m && m[1].trim()) return m[1].trim();
+    }
+    return '';
+  };
+
+  const cleanChoice = (value, allowed, fallback) => {
+    const v=(value||'').trim();
+    const exact=allowed.find(a=>a.toLowerCase()===v.toLowerCase());
+    if(exact) return exact;
+    const first=v.split('/')[0].trim();
+    return allowed.find(a=>a.toLowerCase()===first.toLowerCase()) || fallback;
+  };
+
+  const numberFrom = value => {
+    const m=String(value||'').match(/[\d,.]+/);
+    return m ? Number(m[0].replace(/,/g,'')) : 0;
+  };
+
+  const title = getField('Property Title');
+  const emirate = cleanChoice(getField('Emirate'), ['Dubai','Abu Dhabi','Sharjah','Ajman','Ras Al Khaimah','Fujairah','Umm Al Quwain'], 'Dubai');
+  const purpose = cleanChoice(getField('Purpose'), ['Sale','Rent','Off-plan','Investment','JV'], 'Sale');
+  const type = cleanChoice(getField('Property Type'), ['Villa','Apartment','Townhouse','Land','Building','Commercial','Warehouse','Hotel','Office','Other'], 'Other');
+  const status = cleanChoice(getField('Status'), ['Available','Reserved','Sold','Rented','Under Offer'], 'Available');
+  const area = getField('Area / Community','Area/Community');
+  const locationUrl = getField('Location Link','Location Link URL');
+  const price = numberFrom(getField('Price'));
+  const size = numberFrom(getField('Size'));
+  const beds = getField('Bedrooms');
+  const baths = getField('Bathrooms');
+  const ref = getField('Reference');
+  const agent = getField('Agent');
+  const contact = getField('Contact / WhatsApp','Contact/WhatsApp','WhatsApp','Contact');
+  const feature1 = getField('Main Feature 1');
+  const feature2 = getField('Main Feature 2');
+  const feature3 = getField('Main Feature 3');
+  const photo = getField('Photo URL');
+  const notes = getField('Notes');
+
+  if(!title){
+    alert('Property Title is missing. Complete the template and try again.');
+    return;
+  }
+
+  const item={
+    id:crypto.randomUUID(), title, emirate, purpose, type, status, area, locationUrl,
+    price, size, beds, baths, ref, agent, contact, feature1, feature2, feature3,
+    photo, notes, updatedAt:new Date().toISOString()
+  };
+
+  properties.unshift(item);
+  saveStore();
+  render();
+  closeImport();
+  $('chatText').value='';
+  alert('1 property listing imported successfully.');
 }
 
 function toggleTheme(){
@@ -775,11 +822,12 @@ if(properties.length===0){
   properties=[{
     id:crypto.randomUUID(),title:'Luxury Villa in Nad Al Sheba',emirate:'Dubai',purpose:'Sale',type:'Villa',
     status:'Available',area:'Nad Al Sheba, Dubai',locationUrl:'',price:5500000,size:7000,beds:'5',baths:'6',
-    ref:'AHRE-DEMO-001',agent:'Saif Alfalasi',contact:'+971 50 880 0104',photo:'',
+    ref:'AHRE-DEMO-001',agent:'Saif Alfalasi',contact:'+971 50 880 0104',feature1:'Spacious layout',feature2:'Private villa',feature3:'Serious buyers only',photo:'',
     notes:'Private villa, spacious layout, serious buyers only.',updatedAt:new Date().toISOString()
   }];
   saveStore();
 }
+repairOldImports();
 setupPhotoDrop();
 syncPhotoPreview();
 render();
