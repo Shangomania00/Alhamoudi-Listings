@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Al Hamoudi Listings — Admin</title>
+<style>
+:root{
+  --bg:#0b0c0c;--panel:#151615;--panel2:#1d1e1d;--line:#39352a;
+  --text:#f8f6ef;--muted:#aaa79e;--gold:#d8c47d;--gold2:#f2e2a4;
+  --danger:#ef6b6b;--success:#62d89c;--shadow:0 20px 55px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:
+linear-gradient(rgba(7,8,8,.94),rgba(7,8,8,.94)),
+url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=80') center/cover fixed;
+color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;min-height:100vh}
+button,input,select,textarea,a{font:inherit}
+a{color:inherit}
+.shell{max-width:1500px;margin:auto;padding:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 16px;
+background:rgba(19,20,19,.94);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+position:sticky;top:8px;z-index:30;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:12px;padding:6px}
+.brand h1{font-size:clamp(17px,2vw,25px);margin:0}
+.brand p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 13px;border-radius:11px;
+font-weight:750;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:hover{transform:translateY(-1px);border-color:var(--gold)}
+.btn.primary{background:var(--gold);color:#17150f;border-color:transparent}
+.btn.danger{background:#6a2929;border-color:#934040}
+.btn.success{background:#183d2d;border-color:#2b7050}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px;margin-top:16px}
+.panel{background:rgba(18,19,18,.95);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.sidebar{padding:16px;align-self:start;position:sticky;top:96px;max-height:calc(100vh - 110px);overflow:auto}
+.main{padding:16px;min-width:0}
+h2{margin:0 0 14px}
+.field{margin-bottom:11px}
+.field label{display:block;color:var(--gold2);font-size:11px;font-weight:850;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);
+border-radius:10px;padding:10px 11px;outline:none}
+.field textarea{min-height:78px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.form-actions{display:flex;gap:8px;position:sticky;bottom:-16px;background:linear-gradient(transparent,var(--panel) 24%);padding-top:18px}
+.form-actions .btn{flex:1}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:13px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:13px}
+.stat b{display:block;color:var(--gold);font-size:21px}
+.stat span{color:var(--muted);font-size:11px}
+.filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px;margin-bottom:13px}
+.filters input,.filters select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:12px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:.18s}
+.card:hover{transform:translateY(-2px);border-color:var(--gold)}
+.photo{height:165px;background:linear-gradient(135deg,#31312c,#57523c);background-position:center;background-size:cover;display:flex;align-items:end}
+.tag{margin:9px;background:rgba(0,0,0,.72);padding:6px 8px;border-radius:8px;font-size:10px;font-weight:850}
+.card-body{padding:12px}
+.card h3{margin:0 0 4px;font-size:17px}
+.location{font-size:11px;color:var(--muted)}
+.price{color:var(--gold);font-size:22px;font-weight:900;margin:10px 0}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.meta div{background:rgba(255,255,255,.035);border-radius:8px;padding:8px 5px;text-align:center;font-size:10px}
+.notes{margin-top:8px;padding:9px;border:1px solid var(--line);border-radius:9px;color:#dedbd1;font-size:11px;line-height:1.5;min-height:54px}
+.small{font-size:10px;color:var(--muted);line-height:1.5}
+.card-actions{display:flex;gap:6px;margin-top:10px}
+.card-actions .btn{flex:1;padding:8px 6px;font-size:11px}
+.empty{text-align:center;color:var(--muted);border:1px dashed var(--line);padding:55px 20px;border-radius:14px}
+.notice{padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:12px;display:none}
+.notice.show{display:block}.notice.ok{background:#173d2d;color:#b9f1d0}.notice.err{background:#512828;color:#ffd0d0}
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login-card{width:min(430px,100%);background:rgba(18,19,18,.97);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:var(--shadow)}
+.login-card .brand{margin-bottom:20px}.login-card h2{margin-bottom:6px}.login-card p{color:var(--muted);font-size:12px}
+.filebox{border:1px dashed var(--gold);border-radius:11px;padding:12px;text-align:center;color:var(--muted);font-size:11px}
+.toggle{display:flex;align-items:center;gap:8px;color:var(--text);font-size:12px}
+.toggle input{width:auto}
+.public-hero{padding:40px 4px 20px;text-align:center}.public-hero h2{font-size:clamp(27px,4vw,48px);margin-bottom:8px}.public-hero p{color:var(--muted)}
+.public-main{padding:16px;background:rgba(18,19,18,.94);border:1px solid var(--line);border-radius:18px}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.filters{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.shell{padding:9px}.topbar{align-items:flex-start;flex-direction:column}.actions{justify-content:flex-start}.row,.filters{grid-template-columns:1fr}.cards{grid-template-columns:1fr}}
+@media print{body{background:#fff;color:#111}.topbar,.sidebar,.filters,.stats,.card-actions,.no-print{display:none!important}.shell,.layout,.main,.public-main{display:block;padding:0;margin:0;border:0;background:#fff;box-shadow:none}.cards{grid-template-columns:1fr 1fr}.card{break-inside:avoid;background:#fff;color:#111;border:1px solid #aaa}.location,.small{color:#555}.price{color:#786529}.notes{color:#333}@page{size:A4;margin:12mm}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <div class="brand"><img src="./assets/logo.png" alt="Logo"><div><h1>Admin Login</h1><p>Al Hamoudi Real Estate Listings</p></div></div>
+    <div id="loginNotice" class="notice"></div>
+    <div class="field"><label>Email</label><input id="loginEmail" type="email" value="shangomania69@gmail.com"></div>
+    <div class="field"><label>Password</label><input id="loginPassword" type="password" placeholder="Your Supabase password"></div>
+    <button class="btn primary" style="width:100%" onclick="login()">🔐 Sign In</button>
+    <p style="margin-top:14px">Public page: <a href="./index.html" style="color:var(--gold)">Open client listings</a></p>
+  </div>
+</div>
+
+<div id="appView" hidden>
+<div class="shell">
+<header class="topbar">
+  <div class="brand"><img src="./assets/logo.png" alt="Logo"><div><h1>UAE Real Estate Listing Manager</h1><p>Live Supabase admin dashboard</p></div></div>
+  <div class="actions">
+    <a class="btn" href="./index.html" target="_blank">👁 Public Page</a>
+    <button class="btn" onclick="loadProperties()">↻ Refresh</button>
+    <button class="btn" onclick="exportCSV()">Export CSV</button>
+    <button class="btn" onclick="document.getElementById('jsonImport').click()">Import JSON</button>
+    <button class="btn" onclick="window.print()">Print</button>
+    <button class="btn danger" onclick="logout()">Sign Out</button>
+    <input id="jsonImport" type="file" accept=".json" hidden onchange="importJSON(event)">
+  </div>
+</header>
+
+<div class="layout">
+<aside class="panel sidebar">
+  <h2 id="formTitle">Add Property</h2>
+  <div id="saveNotice" class="notice"></div>
+  <input id="editId" type="hidden">
+  <input id="oldPhotoPath" type="hidden">
+  <div class="field"><label>Property Title *</label><input id="title" placeholder="Luxury villa in Dubai"></div>
+  <div class="row">
+    <div class="field"><label>Emirate</label><select id="emirate"><option>Dubai</option><option>Abu Dhabi</option><option>Sharjah</option><option>Ajman</option><option>Ras Al Khaimah</option><option>Fujairah</option><option>Umm Al Quwain</option></select></div>
+    <div class="field"><label>Purpose</label><select id="purpose"><option>Sale</option><option>Rent</option><option>Off-plan</option><option>Investment</option><option>JV</option></select></div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Property Type</label><select id="property_type"><option>Villa</option><option>Apartment</option><option>Townhouse</option><option>Land</option><option>Building</option><option>Commercial</option><option>Warehouse</option><option>Hotel</option><option>Office</option><option>Other</option></select></div>
+    <div class="field"><label>Status</label><select id="status"><option>Available</option><option>Reserved</option><option>Under Offer</option><option>Sold</option><option>Rented</option></select></div>
+  </div>
+  <div class="field"><label>Area / Community</label><input id="area" placeholder="Nad Al Sheba, Dubai"></div>
+  <div class="field"><label>Google Maps / Location URL</label><input id="location_url" placeholder="https://maps.google.com/..."></div>
+  <div class="row">
+    <div class="field"><label>Price (AED)</label><input id="price" type="number" min="0"></div>
+    <div class="field"><label>Size (sq ft)</label><input id="size_sqft" type="number" min="0"></div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Bedrooms</label><input id="bedrooms"></div>
+    <div class="field"><label>Bathrooms</label><input id="bathrooms"></div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Reference</label><input id="reference"></div>
+    <div class="field"><label>Agent</label><input id="agent" value="Saif Alfalasi"></div>
+  </div>
+  <div class="field"><label>Contact / WhatsApp</label><input id="contact" value="+971508800104"></div>
+  <div class="field"><label>Property Photo</label><div class="filebox"><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp"><div>JPEG, PNG or WebP · maximum 6 MB</div></div></div>
+  <div class="field"><label>Photo URL (optional)</label><input id="photo_url" placeholder="Use only when not uploading a file"></div>
+  <div class="field"><label>Main Feature 1</label><input id="feature_1"></div>
+  <div class="field"><label>Main Feature 2</label><input id="feature_2"></div>
+  <div class="field"><label>Main Feature 3</label><input id="feature_3"></div>
+  <div class="field"><label>Additional Notes</label><textarea id="notes"></textarea></div>
+  <div class="row">
+    <label class="toggle"><input id="is_public" type="checkbox" checked> Visible to clients</label>
+    <div class="field"><label>Sort Order</label><input id="sort_order" type="number" value="0"></div>
+  </div>
+  <div class="form-actions"><button class="btn primary" onclick="saveProperty()">💾 Save Property</button><button class="btn" onclick="resetForm()">Clear</button></div>
+</aside>
+
+<main class="panel main">
+  <div class="stats">
+    <div class="stat"><b id="totalCount">0</b><span>Total Listings</span></div>
+    <div class="stat"><b id="publicCount">0</b><span>Public Listings</span></div>
+    <div class="stat"><b id="availableCount">0</b><span>Available</span></div>
+    <div class="stat"><b id="portfolioValue">AED 0</b><span>Portfolio Value</span></div>
+  </div>
+  <div class="filters">
+    <input id="search" placeholder="Search title, area, reference..." oninput="render()">
+    <select id="fEmirate" onchange="render()"><option value="">All Emirates</option><option>Dubai</option><option>Abu Dhabi</option><option>Sharjah</option><option>Ajman</option><option>Ras Al Khaimah</option><option>Fujairah</option><option>Umm Al Quwain</option></select>
+    <select id="fPurpose" onchange="render()"><option value="">All Purposes</option><option>Sale</option><option>Rent</option><option>Off-plan</option><option>Investment</option><option>JV</option></select>
+    <select id="fType" onchange="render()"><option value="">All Types</option><option>Villa</option><option>Apartment</option><option>Townhouse</option><option>Land</option><option>Building</option><option>Commercial</option><option>Warehouse</option><option>Hotel</option><option>Office</option><option>Other</option></select>
+    <select id="sort" onchange="render()"><option value="newest">Newest</option><option value="priceHigh">Price High-Low</option><option value="priceLow">Price Low-High</option><option value="area">Area A-Z</option></select>
+  </div>
+  <div id="cards" class="cards"></div>
+</main>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script>
+let properties=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const money=n=>'AED '+Number(n||0).toLocaleString('en-AE');
+function notify(id,msg,ok=true){const el=$(id);el.className='notice show '+(ok?'ok':'err');el.textContent=msg;setTimeout(()=>el.className='notice',4500)}
+
+async function init(){
+ const {data:{session}}=await supabaseClient.auth.getSession();
+ if(session) showApp(); else showLogin();
+ supabaseClient.auth.onAuthStateChange((_event,session)=>session?showApp():showLogin());
+}
+function showLogin(){$('loginView').hidden=false;$('appView').hidden=true}
+async function showApp(){$('loginView').hidden=true;$('appView').hidden=false;await loadProperties()}
+async function login(){
+ const email=$('loginEmail').value.trim(),password=$('loginPassword').value;
+ const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+ if(error) notify('loginNotice',error.message,false);
+}
+async function logout(){await supabaseClient.auth.signOut()}
+async function loadProperties(){
+ const {data,error}=await supabaseClient.from('properties').select('*').order('created_at',{ascending:false});
+ if(error){notify('saveNotice','Load failed: '+error.message,false);return}
+ properties=data||[];render();
+}
+async function uploadPhoto(file){
+ if(!file)return null;
+ if(file.size>6*1024*1024)throw new Error('Photo is larger than 6 MB.');
+ const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+ const path=`listings/${crypto.randomUUID()}.${ext}`;
+ const {error}=await supabaseClient.storage.from('property-images').upload(path,file,{cacheControl:'3600',upsert:false});
+ if(error)throw error;
+ const {data}=supabaseClient.storage.from('property-images').getPublicUrl(path);
+ return {photo_path:path,photo_url:data.publicUrl};
+}
+function collect(){
+ return {
+ title:$('title').value.trim(),emirate:$('emirate').value,purpose:$('purpose').value,
+ property_type:$('property_type').value,status:$('status').value,area:$('area').value.trim(),
+ location_url:$('location_url').value.trim(),price:Number($('price').value||0),size_sqft:Number($('size_sqft').value||0),
+ bedrooms:$('bedrooms').value.trim(),bathrooms:$('bathrooms').value.trim(),reference:$('reference').value.trim(),
+ agent:$('agent').value.trim(),contact:$('contact').value.trim(),photo_url:$('photo_url').value.trim()||null,
+ feature_1:$('feature_1').value.trim(),feature_2:$('feature_2').value.trim(),feature_3:$('feature_3').value.trim(),
+ notes:$('notes').value.trim(),is_public:$('is_public').checked,sort_order:Number($('sort_order').value||0)
+ };
+}
+async function saveProperty(){
+ try{
+  const item=collect();if(!item.title)throw new Error('Property title is required.');
+  const file=$('photoFile').files[0];if(file)Object.assign(item,await uploadPhoto(file));
+  const id=$('editId').value;
+  let result=id
+   ? await supabaseClient.from('properties').update(item).eq('id',id).select().single()
+   : await supabaseClient.from('properties').insert(item).select().single();
+  if(result.error)throw result.error;
+  notify('saveNotice',id?'Property updated ✅':'Property saved online ✅',true);
+  resetForm();await loadProperties();
+ }catch(e){notify('saveNotice',e.message||String(e),false)}
+}
+function editProperty(id){
+ const x=properties.find(p=>p.id===id);if(!x)return;
+ ['title','emirate','purpose','property_type','status','area','location_url','price','size_sqft','bedrooms','bathrooms','reference','agent','contact','photo_url','feature_1','feature_2','feature_3','notes','sort_order'].forEach(k=>{if($(k))$(k).value=x[k]??''});
+ $('editId').value=x.id;$('oldPhotoPath').value=x.photo_path||'';$('is_public').checked=!!x.is_public;$('formTitle').textContent='Edit Property';window.scrollTo({top:0,behavior:'smooth'});
+}
+async function deleteProperty(id){
+ if(!confirm('Delete this property permanently?'))return;
+ const x=properties.find(p=>p.id===id);
+ const {error}=await supabaseClient.from('properties').delete().eq('id',id);
+ if(error){notify('saveNotice',error.message,false);return}
+ if(x?.photo_path)await supabaseClient.storage.from('property-images').remove([x.photo_path]);
+ await loadProperties();
+}
+async function duplicateProperty(id){
+ const x=properties.find(p=>p.id===id);if(!x)return;
+ const copy={...x,title:x.title+' (Copy)'};delete copy.id;delete copy.created_at;delete copy.updated_at;
+ const {error}=await supabaseClient.from('properties').insert(copy);if(error)notify('saveNotice',error.message,false);else loadProperties();
+}
+function resetForm(){
+ ['editId','oldPhotoPath','title','area','location_url','price','size_sqft','bedrooms','bathrooms','reference','photo_url','feature_1','feature_2','feature_3','notes'].forEach(id=>$(id).value='');
+ $('photoFile').value='';$('is_public').checked=true;$('sort_order').value=0;$('formTitle').textContent='Add Property';
+}
+function render(){
+ const q=$('search').value.toLowerCase(),em=$('fEmirate').value,pu=$('fPurpose').value,ty=$('fType').value;
+ let list=properties.filter(x=>{const blob=[x.title,x.area,x.reference,x.agent,x.notes].join(' ').toLowerCase();return(!q||blob.includes(q))&&(!em||x.emirate===em)&&(!pu||x.purpose===pu)&&(!ty||x.property_type===ty)});
+ const s=$('sort').value;if(s==='priceHigh')list.sort((a,b)=>b.price-a.price);if(s==='priceLow')list.sort((a,b)=>a.price-b.price);if(s==='area')list.sort((a,b)=>(a.area||'').localeCompare(b.area||''));
+ $('totalCount').textContent=properties.length;$('publicCount').textContent=properties.filter(x=>x.is_public).length;$('availableCount').textContent=properties.filter(x=>x.status==='Available').length;$('portfolioValue').textContent=money(properties.reduce((a,x)=>a+Number(x.price||0),0));
+ $('cards').innerHTML=list.length?list.map(x=>`<article class="card"><div class="photo" style="${x.photo_url?`background-image:url('${esc(x.photo_url)}')`:''}"><span class="tag">${esc(x.purpose)} · ${esc(x.status)} · ${x.is_public?'Public':'Private'}</span></div><div class="card-body"><h3>${esc(x.title)}</h3><div class="location">${esc(x.area||x.emirate)} · ${esc(x.emirate)}</div><div class="price">${money(x.price)}</div><div class="meta"><div>🛏 ${esc(x.bedrooms||'-')}</div><div>🛁 ${esc(x.bathrooms||'-')}</div><div>◫ ${Number(x.size_sqft||0).toLocaleString()} ft²</div></div><div class="notes">${[x.feature_1,x.feature_2,x.feature_3,x.notes].filter(Boolean).map(v=>'✓ '+esc(v)).join('<br>')||'No notes'}</div><div class="small" style="margin-top:8px">Ref: ${esc(x.reference||'-')} · Agent: ${esc(x.agent||'-')}<br>${esc(x.contact||'')}</div><div class="card-actions"><button class="btn" onclick="editProperty('${x.id}')">Edit</button><button class="btn" onclick="duplicateProperty('${x.id}')">Copy</button><button class="btn danger" onclick="deleteProperty('${x.id}')">Delete</button></div></div></article>`).join(''):'<div class="empty">No listings yet. Add your first property.</div>';
+}
+function exportCSV(){
+ const heads=['title','emirate','purpose','property_type','status','area','location_url','price','size_sqft','bedrooms','bathrooms','reference','agent','contact','photo_url','feature_1','feature_2','feature_3','notes','is_public','sort_order'];
+ const rows=[heads.join(','),...properties.map(x=>heads.map(h=>`"${String(x[h]??'').replaceAll('"','""')}"`).join(','))];
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));a.download='alhamoudi-listings.csv';a.click();
+}
+async function importJSON(e){
+ try{const file=e.target.files[0];if(!file)return;const data=JSON.parse(await file.text());if(!Array.isArray(data))throw new Error('JSON must contain an array.');
+ const clean=data.map(x=>({title:x.title||'Imported Property',emirate:x.emirate||'Dubai',purpose:x.purpose||'Sale',property_type:x.property_type||x.type||'Other',status:x.status||'Available',area:x.area||'',location_url:x.location_url||'',price:Number(x.price||0),size_sqft:Number(x.size_sqft||x.size||0),bedrooms:String(x.bedrooms??x.beds??''),bathrooms:String(x.bathrooms??x.baths??''),reference:x.reference||x.ref||'',agent:x.agent||'',contact:x.contact||'',photo_url:x.photo_url||x.photo||null,feature_1:x.feature_1||'',feature_2:x.feature_2||'',feature_3:x.feature_3||'',notes:x.notes||'',is_public:x.is_public!==false,sort_order:Number(x.sort_order||0)}));
+ const {error}=await supabaseClient.from('properties').insert(clean);if(error)throw error;notify('saveNotice',clean.length+' properties imported ✅');await loadProperties();
+ }catch(err){notify('saveNotice',err.message,false)}finally{e.target.value=''}
+}
+init();
+</script>
+</body></html>
